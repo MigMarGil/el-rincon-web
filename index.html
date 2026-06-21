@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Rincón del Informático | Apuntes Libres</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans antialiased">
+
+    <nav
+        class="border-b border-gray-800 bg-gray-950/50 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-600 text-white p-2 rounded-lg shadow-lg shadow-blue-500/20">
+                <i class="fa-solid fa-code text-xl"></i>
+            </div>
+            <span
+                class="text-xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                El Rincón del Informático
+            </span>
+        </div>
+        <div class="flex items-center space-x-4">
+            <button onclick="openModal('upload-modal')"
+                class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center space-x-2 shadow-lg shadow-blue-600/10 cursor-pointer">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Subir Aporte</span>
+            </button>
+            <div id="auth-section">
+                <button onclick="login()"
+                    class="border border-gray-700 hover:bg-gray-800 text-sm font-medium px-4 py-2 rounded-xl transition cursor-pointer">
+                    <i class="fa-brands fa-github mr-2"></i> Iniciar Sesión
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <header class="max-w-6xl mx-auto px-6 pt-16 pb-12 text-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4">
+            Apuntes y exámenes, <span class="text-blue-500">sin anuncios</span>.
+        </h1>
+        <p class="text-gray-400 max-w-xl mx-auto text-lg mb-8">
+            Una plataforma libre, abierta y colaborativa gestionada por estudiantes para reventar las asignaturas de
+            informática.
+        </p>
+
+        <div
+            class="max-w-2xl mx-auto relative bg-gray-950 border border-gray-800 rounded-2xl p-2 flex items-center shadow-2xl focus-within:border-blue-500 transition">
+            <i class="fa-solid fa-magnifying-glass text-gray-500 ml-3 mr-2"></i>
+            <input type="text" id="search-input" oninput="filterDocuments()"
+                placeholder="Buscar por asignatura, universidad (ej. UAB) o concepto..."
+                class="w-full bg-transparent border-none outline-none text-white placeholder-gray-500 text-base py-2">
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 pb-24">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-white flex items-center space-x-2">
+                <i class="fa-solid fa-fire text-orange-500"></i>
+                <span>Aportes de la Comunidad</span>
+            </h2>
+            <span id="doc-count"
+                class="text-xs bg-gray-800 text-gray-400 px-3 py-1 rounded-full border border-gray-700">0
+                documentos</span>
+        </div>
+
+        <div id="documents-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center py-12 text-gray-500">
+                <i class="fa-solid fa-spinner animate-spin text-2xl mb-2"></i>
+                <p>Cargando base de conocimientos...</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="upload-modal"
+        class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div
+            class="bg-gray-950 border border-gray-800 w-full max-w-md rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <div class="p-6 border-b border-gray-800 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white">Compartir Material</h3>
+                <button onclick="closeModal('upload-modal')" class="text-gray-500 hover:text-white cursor-pointer"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="upload-form" onsubmit="handleUpload(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Título del
+                        aporte</label>
+                    <input type="text" id="doc-title" required placeholder="Ej: Resumen Temario Álgebra"
+                        class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label
+                            class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Universidad</label>
+                        <input type="text" id="doc-uni" required placeholder="Ej: UAB"
+                            class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none text-sm">
+                    </div>
+                    <div>
+                        <label
+                            class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Asignatura</label>
+                        <input type="text" id="doc-subject" required placeholder="Ej: Álgebra"
+                            class="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">Archivo (PDF
+                        o Imagen)</label>
+                    <input type="file" id="doc-file" required accept=".pdf,image/*"
+                        class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-600/10 file:text-blue-400 hover:file:bg-blue-600/20 file:cursor-pointer">
+                </div>
+                <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 rounded-xl shadow-lg shadow-blue-600/10 transition mt-4 cursor-pointer">
+                    Publicar al instante
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://buwtyzjnmisrbabbzkpr.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_LP9MbNI_y77RZv4cGABPLw_EabaV7OK";
+
+        // FIX: Cambiado el nombre de la variable para evitar colisión con el objeto global de la CDN
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let allDocuments = [];
+
+        async function init() {
+            checkUser();
+            fetchDocuments();
+        }
+
+        async function checkUser() {
+            const authSection = document.getElementById('auth-section');
+            let user = localStorage.getItem('user_mock');
+            if (user) {
+                authSection.innerHTML = `
+                    <div class="flex items-center space-x-3 bg-gray-900 px-3 py-1.5 rounded-xl border border-gray-800">
+                        <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        <span class="text-sm font-medium text-gray-300">@Estudiante</span>
+                        <button onclick="logout()" class="text-gray-500 hover:text-red-400 text-xs pl-2"><i class="fa-solid fa-power-off"></i></button>
+                    </div>`;
+            }
+        }
+
+        function login() {
+            localStorage.setItem('user_mock', 'true');
+            window.location.reload();
+        }
+        function logout() {
+            localStorage.removeItem('user_mock');
+            window.location.reload();
+        }
+
+        async function fetchDocuments() {
+            const { data, error } = await supabaseClient
+                .from('documents')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Error cargando documentos:", error);
+                return;
+            }
+            allDocuments = data;
+            renderDocuments(allDocuments);
+        }
+
+        function renderDocuments(docs) {
+            const grid = document.getElementById('documents-grid');
+            document.getElementById('doc-count').innerText = `${docs.length} documentos`;
+
+            if (docs.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-gray-500">No se encontraron apuntes. ¡Sé el primero en subir uno!</div>`;
+                return;
+            }
+
+            grid.innerHTML = docs.map(doc => `
+                <div class="bg-gray-950 border border-gray-800 rounded-2xl p-5 hover:border-gray-700 transition flex flex-col justify-between group shadow-xl">
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="text-xs font-semibold px-2.5 py-1 bg-blue-600/10 text-blue-400 border border-blue-500/10 rounded-lg uppercase tracking-wide">
+                                ${doc.university}
+                            </span>
+                            <span class="text-xs text-gray-500 font-mono">${doc.subject}</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white group-hover:text-blue-400 transition line-clamp-2 mb-2">
+                            ${doc.title}
+                        </h3>
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-900 mt-4">
+                        <div class="flex items-center space-x-1 text-gray-400 text-sm">
+                            <button onclick="upvote('${doc.id}')" class="hover:text-orange-500 p-1 transition cursor-pointer"><i class="fa-solid fa-circle-up text-base"></i></button>
+                            <span class="font-bold">${doc.upvotes}</span>
+                        </div>
+                        <a href="${doc.file_url}" target="_blank" class="bg-gray-900 hover:bg-gray-800 text-white font-medium text-xs px-3 py-2 rounded-xl border border-gray-800 transition flex items-center space-x-1">
+                            <i class="fa-solid fa-eye text-gray-400"></i>
+                            <span>Ver Recurso</span>
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterDocuments() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const filtered = allDocuments.filter(doc =>
+                doc.title.toLowerCase().includes(query) ||
+                doc.university.toLowerCase().includes(query) ||
+                doc.subject.toLowerCase().includes(query)
+            );
+            renderDocuments(filtered);
+        }
+
+        async function upvote(id) {
+            const doc = allDocuments.find(d => d.id === id);
+            if (!doc) return;
+            const { error } = await supabaseClient
+                .from('documents')
+                .update({ upvotes: doc.upvotes + 1 })
+                .eq('id', id);
+
+            if (!error) fetchDocuments();
+        }
+
+        async function handleUpload(e) {
+            e.preventDefault();
+            if (!localStorage.getItem('user_mock')) {
+                alert("Por favor, inicia sesión para subir apuntes comunitarios.");
+                return;
+            }
+
+            const title = document.getElementById('doc-title').value;
+            const university = document.getElementById('doc-uni').value;
+            const subject = document.getElementById('doc-subject').value;
+            const fileInput = document.getElementById('doc-file');
+            const file = fileInput.files[0];
+
+            if (!file) return;
+
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                .from('apuntes')
+                .upload(filePath, file);
+
+            if (uploadError) {
+                alert("Error subiendo el archivo físico.");
+                console.error(uploadError);
+                return;
+            }
+
+            const { data: urlData } = supabaseClient.storage.from('apuntes').getPublicUrl(filePath);
+            const fileUrl = urlData.publicUrl;
+
+            const { error: dbError } = await supabaseClient
+                .from('documents')
+                .insert([{ title, university, subject, file_url: fileUrl }]);
+
+            if (dbError) {
+                alert("Error indexando los apuntes en la base de datos.");
+                console.error(dbError);
+            } else {
+                closeModal('upload-modal');
+                document.getElementById('upload-form').reset();
+                fetchDocuments();
+            }
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        window.onload = init;
+    </script>
+</body>
+
+</html>
